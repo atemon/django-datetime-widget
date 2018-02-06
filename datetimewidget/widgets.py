@@ -107,6 +107,7 @@ BOOTSTRAP_INPUT_TEMPLATE = {
        </div>
        <script type="text/javascript">
            $("#%(id)s").datetimepicker({%(options)s});
+           %(related_picker_js)s
        </script>
        """,
     3: """
@@ -117,6 +118,7 @@ BOOTSTRAP_INPUT_TEMPLATE = {
        </div>
        <script type="text/javascript">
            $("#%(id)s").datetimepicker({%(options)s}).find('input').addClass("form-control");
+           %(related_picker_js)s
        </script>
        """
        }
@@ -171,7 +173,7 @@ class PickerWidgetMixin(object):
     format_name = None
     glyphicon = None
 
-    def __init__(self, attrs=None, options=None, usel10n=None, bootstrap_version=None):
+    def __init__(self, attrs=None, options=None, usel10n=None, bootstrap_version=None, related_picker={}):
 
         if bootstrap_version in [2,3]:
             self.bootstrap_version = bootstrap_version
@@ -186,6 +188,7 @@ class PickerWidgetMixin(object):
 
         self.is_localized = False
         self.format = None
+        self.related_picker = related_picker
 
         # We want to have a Javascript style date format specifier in the options dictionary and we
         # want a Python style date format specifier as a member variable for parsing the date string
@@ -236,6 +239,16 @@ class PickerWidgetMixin(object):
         # Use provided id or generate hex to avoid collisions in document
         id = final_attrs.get('id', uuid.uuid4().hex)
 
+        related_picker_js = ''
+        if self.related_picker and self.related_picker.get("related_picker") != id:
+            self.related_picker.update({'current_picker': id})
+            related_picker_js = """
+        $("#%(id)s").on("dp.change", function (e) {
+            $('#%(related_picker)s').data("DateTimePicker").minDate(e.date);
+            $('#%(related_picker)s').data("DateTimePicker").maxDate(e.date.getDate() + %(day)s);
+        });
+""" % (id, self.related_picker.get('related_picker'), self.related_picker.get('related_picker'), self.related_picker.get('days'))
+
         clearBtn = quote('clearBtn', self.options.get('clearBtn', 'true')) == 'true'
 
         return mark_safe(
@@ -245,7 +258,8 @@ class PickerWidgetMixin(object):
                     rendered_widget=rendered_widget,
                     clear_button=CLEAR_BTN_TEMPLATE[self.bootstrap_version] if clearBtn else "",
                     glyphicon=self.glyphicon,
-                    options=js_options
+                    options=js_options,
+                    related_picker_js=related_picker_js
                     )
         )
 
