@@ -243,10 +243,14 @@ class PickerWidgetMixin(object):
         if self.related_picker and self.related_picker.get("related_picker") != id:
             self.related_picker.update({'current_picker': id})
             related_picker_js = """
-        $("#%(id)s").on("dp.change", function (e) {
-            $('#%(related_picker)s').data("DateTimePicker").minDate(e.date);
-            $('#%(related_picker)s').data("DateTimePicker").maxDate(e.date.getDate() + %(days)s);
-        });
+$(function () {
+    $("body").on("change dp.change", "#%(id)s", function (e) {
+        date = $("#%(id)s").data("datetimepicker").date
+        max_date = moment(date).add(30, 'days').toDate()
+        $('#%(related_picker)s').data("datetimepicker").startDate = date;
+        $('#%(related_picker)s').data("datetimepicker").endDate = max_date;
+    });
+});
 """ % dict(id=id, related_picker=self.related_picker.get('related_picker'), days=self.related_picker.get('days'))
 
         clearBtn = quote('clearBtn', self.options.get('clearBtn', 'true')) == 'true'
@@ -265,7 +269,7 @@ class PickerWidgetMixin(object):
 
     def _media(self):
 
-        js = ["js/bootstrap-datetimepicker.js"]
+        js = ["js/bootstrap-datetimepicker.js", "js/moment-with-locales.js"]
 
         language = self.options.get('language', 'en')
         if language != 'en':
@@ -290,7 +294,7 @@ class DateTimeWidget(PickerWidgetMixin, DateTimeInput):
     format_name = 'DATETIME_INPUT_FORMATS'
     glyphicon = 'glyphicon-th'
 
-    def __init__(self, attrs=None, options=None, usel10n=None, bootstrap_version=None):
+    def __init__(self, attrs=None, options=None, usel10n=None, bootstrap_version=None, related_picker={}):
 
         if options is None:
             options = {}
@@ -298,7 +302,7 @@ class DateTimeWidget(PickerWidgetMixin, DateTimeInput):
         # Set the default options to show only the datepicker object
         options['format'] = options.get('format', 'dd/mm/yyyy hh:ii')
 
-        super(DateTimeWidget, self).__init__(attrs, options, usel10n, bootstrap_version)
+        super(DateTimeWidget, self).__init__(attrs, options, usel10n, bootstrap_version, related_picker)
 
 
 class DateWidget(PickerWidgetMixin, DateInput):
