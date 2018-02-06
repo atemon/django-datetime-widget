@@ -245,9 +245,9 @@ class PickerWidgetMixin(object):
             related_picker_js = """
         $("#%(id)s").on("dp.change", function (e) {
             $('#%(related_picker)s').data("DateTimePicker").minDate(e.date);
-            $('#%(related_picker)s').data("DateTimePicker").maxDate(e.date.getDate() + %(day)s);
+            $('#%(related_picker)s').data("DateTimePicker").maxDate(e.date.getDate() + %(days)s);
         });
-""" % (id, self.related_picker.get('related_picker'), self.related_picker.get('related_picker'), self.related_picker.get('days'))
+""" % dict(id=id, related_picker=self.related_picker.get('related_picker'), days=self.related_picker.get('days'))
 
         clearBtn = quote('clearBtn', self.options.get('clearBtn', 'true')) == 'true'
 
